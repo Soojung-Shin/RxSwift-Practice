@@ -1,5 +1,5 @@
 //
-//  UIViewController+rx.swift
+//  UIViewController+Rx.swift
 //  Combinestagram
 //
 //  Created by Soojung Shin on 2020/02/15.
