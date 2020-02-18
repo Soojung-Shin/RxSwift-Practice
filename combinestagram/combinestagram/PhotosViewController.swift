@@ -36,6 +36,8 @@ class PhotosViewController: UICollectionViewController {
   
   // MARK: private properties
   
+  private let bag = DisposeBag()
+  
   //선택된 사진을 방출하는 subject. 다른 클래스에서 next이벤트 등을 처리할 수 없도록 private으로 설정해주었다.
   private let selectedPhotosSubject = PublishSubject<UIImage>()
   
@@ -61,10 +63,59 @@ class PhotosViewController: UICollectionViewController {
     return PHAsset.fetchAssets(with: allPhotosOptions)
   }
   
+  private func errorMessage() {
+    alert(title: "No access to Camera roll", text: "You can grant access to Combinestagram from the Settings app")
+      .asObservable()
+      .take(5.0, scheduler: MainScheduler.instance)
+      .subscribe(onCompleted: { [weak self] in
+        self?.dismiss(animated: true, completion: nil)
+        _ = self?.navigationController?.popViewController(animated: true)
+      })
+      .disposed(by: bag)
+  }
+  
   // MARK: View Controller
   override func viewDidLoad() {
     super.viewDidLoad()
     
+    let authorized = PHPhotoLibrary.authorized.share()
+    
+    authorized
+      .distinctUntilChanged()
+      .takeLast(1)
+      .subscribe(onNext: { [weak self] in
+        if $0 {
+          self?.photos = PhotosViewController.loadPhotos()
+          DispatchQueue.main.async {
+            self?.collectionView?.reloadData()
+          }
+        } else {
+          guard let errorMessage = self?.errorMessage else { return }
+          DispatchQueue.main.async(execute: errorMessage)
+        }
+      })
+    
+//    //사용자가 앱이 Photo Library에 접근하는 것을 허가하는 경우
+//    authorized
+//      .skipWhile { !$0 }
+//      .take(1)
+//      .subscribe(onNext: { [weak self] _ in
+//        self?.photos = PhotosViewController.loadPhotos()
+//        DispatchQueue.main.async {
+//          self?.collectionView?.reloadData()
+//        }
+//      })
+//      .disposed(by: bag)
+//    
+//    //사용자가 앱이 Photo Library에 접근하는 것을 허가하지 않는 경우
+//    authorized
+//      .distinctUntilChanged()
+//      .takeLast(1)
+//      .filter { !$0 }
+//      .subscribe(onNext: { [weak self] _ in
+//        guard let errorMessage = self?.errorMessage else { return }
+//        DispatchQueue.main.async(execute: errorMessage)
+//      })
   }
   
   override func viewWillDisappear(_ animated: Bool) {
