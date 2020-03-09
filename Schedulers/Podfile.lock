@@ -1,0 +1,20 @@
+PODS:
+  - RxAtomic (4.4.2)
+  - RxSwift (4.4.1):
+    - RxAtomic (~> 4.4)
+
+DEPENDENCIES:
+  - RxSwift (= 4.4.1)
+
+SPEC REPOS:
+  trunk:
+    - RxAtomic
+    - RxSwift
+
+SPEC CHECKSUMS:
+  RxAtomic: d00e97c10db88c6f08540e0bf2752fc5a2404167
+  RxSwift: 92fcf68dfef21f3e2ab1965363d9e7b3d787597e
+
+PODFILE CHECKSUM: 3922384b91f32d828a57b10ece907ee398e4c44f
+
+COCOAPODS: 1.8.4
