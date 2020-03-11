@@ -1,0 +1,40 @@
+PODS:
+  - Hue (5.0.0)
+  - RxBlocking (5.1.0):
+    - RxSwift (~> 5)
+  - RxCocoa (5.0.1):
+    - RxRelay (~> 5)
+    - RxSwift (~> 5)
+  - RxRelay (5.0.1):
+    - RxSwift (~> 5)
+  - RxSwift (5.0.1)
+  - RxTest (5.1.0):
+    - RxSwift (~> 5)
+
+DEPENDENCIES:
+  - Hue
+  - RxBlocking
+  - RxCocoa
+  - RxSwift
+  - RxTest
+
+SPEC REPOS:
+  trunk:
+    - Hue
+    - RxBlocking
+    - RxCocoa
+    - RxRelay
+    - RxSwift
+    - RxTest
+
+SPEC CHECKSUMS:
+  Hue: c129cb67be7d093a82bbbc30ce8a96757bf6f37a
+  RxBlocking: 5ef131267220f92ef68531dd6afeaf407cd6b41a
+  RxCocoa: e741b9749968e8a143e2b787f1dfbff2b63d0a5c
+  RxRelay: 89d54507f4fd4d969e6ec1d4bd7f3673640b4640
+  RxSwift: e2dc62b366a3adf6a0be44ba9f405efd4c94e0c4
+  RxTest: d5e1c9c1880de2751041fa485d476ce006967b31
+
+PODFILE CHECKSUM: 55cf4a6b0a5738e178705296dc10bd637d6d62f4
+
+COCOAPODS: 1.8.4
