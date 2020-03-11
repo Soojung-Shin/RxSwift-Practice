@@ -2,7 +2,7 @@ platform :ios, '12.0'
 use_frameworks!
 
 def my_pods
-  pod 'RxSwift', '4.4.1'
+  pod 'RxSwift'
   pod 'SwiftyJSON'
   pod 'Gifu'
 end
