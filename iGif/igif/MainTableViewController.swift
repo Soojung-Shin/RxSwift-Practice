@@ -30,60 +30,60 @@ import UIKit
 import RxSwift
 
 class MainTableViewController: UITableViewController {
-  private let searchController = UISearchController(searchResultsController: nil)
-  private let bag = DisposeBag()
-  private var gifs = [GiphyGif]()
-  private let search = BehaviorSubject(value: "")
-  
-  override func viewDidLoad() {
-    super.viewDidLoad()
+    private let searchController = UISearchController(searchResultsController: nil)
+    private let bag = DisposeBag()
+    private var gifs = [GiphyGif]()
+    private let search = BehaviorSubject(value: "")
     
-    title = "iGif"
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        title = "iGif"
+        
+        searchController.searchResultsUpdater = self
+        searchController.dimsBackgroundDuringPresentation = false
+        definesPresentationContext = true
+        tableView.tableHeaderView = searchController.searchBar
+        
+        search.filter { $0.count >= 3 }
+            .throttle(0.3, scheduler: MainScheduler.instance)
+            .distinctUntilChanged()
+            .flatMapLatest { query -> Observable<[GiphyGif]> in
+                return ApiController.shared.search(text: query)
+                    .catchErrorJustReturn([])
+            }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { result in
+                self.gifs = result
+                self.tableView.reloadData()
+            })
+            .disposed(by: bag)
+    }
     
-    searchController.searchResultsUpdater = self
-    searchController.dimsBackgroundDuringPresentation = false
-    definesPresentationContext = true
-    tableView.tableHeaderView = searchController.searchBar
+    // MARK: - Table view data source
     
-    search.filter { $0.count >= 3 }
-      .throttle(0.3, scheduler: MainScheduler.instance)
-      .distinctUntilChanged()
-      .flatMapLatest { query -> Observable<[GiphyGif]> in
-        return ApiController.shared.search(text: query)
-          .catchErrorJustReturn([])
-      }
-      .observeOn(MainScheduler.instance)
-      .subscribe(onNext: { result in
-        self.gifs = result
-        self.tableView.reloadData()
-      })
-      .disposed(by: bag)
-  }
-  
-  // MARK: - Table view data source
-  
-  override func numberOfSections(in tableView: UITableView) -> Int {
-    return 1
-  }
-  
-  override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return gifs.count
-  }
-
-  override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(withIdentifier: "GifCell", for: indexPath) as! GifTableViewCell
-
-    let gif = gifs[indexPath.item]
-    cell.downloadAndDisplay(gif: gif.image.url)
-
-    return cell
-  }
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
+    }
+    
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return gifs.count
+    }
+    
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "GifCell", for: indexPath) as! GifTableViewCell
+        
+        let gif = gifs[indexPath.item]
+        cell.downloadAndDisplay(gif: gif.image.url)
+        
+        return cell
+    }
 }
 
 extension MainTableViewController: UISearchResultsUpdating {
-  
-  public func updateSearchResults(for searchController: UISearchController) {
-    search.onNext(searchController.searchBar.text ?? "")
-  }
-  
+    
+    public func updateSearchResults(for searchController: UISearchController) {
+        search.onNext(searchController.searchBar.text ?? "")
+    }
+    
 }
