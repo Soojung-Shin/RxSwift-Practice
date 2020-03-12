@@ -117,7 +117,11 @@ extension Reactive where Base: URLSession {
     
     func image(request: URLRequest) -> Observable<UIImage> {
         return data(request: request).map { data in
-            return UIImage(data: data) ?? UIImage()
+            guard let image = UIImage(data: data) else {
+                throw RxURLSessionError.deserializationFailed
+            }
+            
+            return image
         }
     }
 }

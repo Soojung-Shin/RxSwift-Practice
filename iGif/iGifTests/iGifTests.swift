@@ -39,7 +39,8 @@ class iGifTests: XCTestCase {
     let obj = ["array": ["foo", "bar"], "foo": "bar"] as [String: AnyHashable]
     let request = URLRequest(url: URL(string: "http://raywenderlich.com")!)
     let errorRequest = URLRequest(url: URL(string: "http://rw.com")!)
-    
+    let errorImageRequest = URLRequest(url: URL(string: "http://imageerror.com")!)
+
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -49,12 +50,70 @@ class iGifTests: XCTestCase {
         stub(condition: isHost("rw.com")) { _ in
             return HTTPStubsResponse(error: RxURLSessionError.unknown)
         }
+        stub(condition: isHost("imageerror.com")) { _ in
+            return HTTPStubsResponse(error: RxURLSessionError.deserializationFailed)
+        }
     }
     
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
         HTTPStubs.removeAllStubs()
+    }
+    
+    //Data를 요청했을 때 nil을 리턴하지 않는지 테스트
+    func testData() {
+        let observable = URLSession.shared.rx.data(request: request)
+        expect(observable.toBlocking().firstOrNil()).toNot(beNil())
+    }
+    
+    func testString() {
+        let observable = URLSession.shared.rx.string(request: request)
+        let result = observable.toBlocking().firstOrNil() ?? ""
+        
+        let option1 = "{\"array\":[\"foo\",\"bar\"],\"foo\":\"bar\"}"
+        let option2 = "{\"foo\":\"bar\",\"array\":[\"foo\",\"bar\"]}"
+        
+        expect((result == option1) || (result == option2)).to(beTrue())
+    }
+    
+    func testJSON() {
+        let observable = URLSession.shared.rx.json(request: request)
+        let result = observable.toBlocking().firstOrNil()
+        
+        expect(result as? [String : AnyHashable]) == obj
+    }
+    
+    func testError() {
+        var erroredCorrectly = false
+        let observable = URLSession.shared.rx.json(request: errorRequest)
+        
+        do {
+            _ = try observable.toBlocking().first()
+            assertionFailure()
+        } catch RxURLSessionError.unknown {
+            erroredCorrectly = true
+        } catch {
+            assertionFailure()
+        }
+        
+        expect(erroredCorrectly) == true
+    }
+    
+    func testImageError() {
+        var erroredCorrectly = false
+        let observable = URLSession.shared.rx.image(request: errorImageRequest)
+        
+        do {
+            _ = try observable.toBlocking().first()
+            assertionFailure()
+        } catch RxURLSessionError.deserializationFailed {
+            erroredCorrectly = true
+        } catch {
+            assertionFailure()
+        }
+        
+        expect(erroredCorrectly) == true
     }
 }
 
