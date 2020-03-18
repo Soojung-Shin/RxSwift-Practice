@@ -40,6 +40,7 @@ class ViewController: UIViewController {
     @IBOutlet private var iconLabel: UILabel!
     @IBOutlet private var cityNameLabel: UILabel!
     @IBOutlet private var celsiusSwitch: UISwitch!
+    @IBOutlet private var switchLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,16 +59,25 @@ class ViewController: UIViewController {
 //            })
 //            .disposed(by: disposeBag)
         
-        //🤔 왜 검색 실패로 404 받아온 후로는 검색이 안되지?!
-        //search의 flatMapLatest에서 catchErrorJustReturn을 지워서 안됐던것임...아~~~ 에러 받으면 그 옵저버블이 바로 종료돼서 그 다음 이벤트를 받아올 수가 없었던거군...
-        let search = searchCityName.rx.controlEvent(UIControl.Event.editingDidEndOnExit)
+        let searchInput = searchCityName.rx.controlEvent(UIControl.Event.editingDidEndOnExit)
             .map { self.searchCityName.text ?? "" }
             .filter { !$0.isEmpty }
+        
+        //🤔 왜 검색 실패로 404 받아온 후로는 검색이 안되지?!
+        //search의 flatMapLatest에서 catchErrorJustReturn을 지워서 안됐던것임...아~~~ 에러 받으면 그 옵저버블이 바로 종료돼서 그 다음 이벤트를 받아올 수가 없었던거군...
+        let search = searchInput
             .flatMapLatest { text in
                 return ApiController.shared.currentWeather(city: text)
                     .catchErrorJustReturn(ApiController.Weather.empty)
             }
             .asDriver(onErrorJustReturn: ApiController.Weather.empty)
+        
+        let running = Observable.merge(
+                searchInput.map { _ in true },
+                search.map { _ in false}.asObservable()
+            )
+            .startWith(true)
+            .asDriver(onErrorJustReturn: false)
 
         let tempSwitch = celsiusSwitch.rx.isOn.asDriver(onErrorJustReturn: true)
 
@@ -148,5 +158,6 @@ class ViewController: UIViewController {
         humidityLabel.textColor = UIColor.cream
         iconLabel.textColor = UIColor.cream
         cityNameLabel.textColor = UIColor.cream
+        switchLabel.textColor = UIColor.cream
     }
 }
